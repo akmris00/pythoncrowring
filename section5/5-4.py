@@ -27,3 +27,4 @@ db.remove(SQL.name == 'park')
 
 #전체 조회
 print(db.all())
+ 
