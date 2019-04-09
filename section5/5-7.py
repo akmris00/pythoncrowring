@@ -18,6 +18,6 @@ c.execute("UPDATE users SET username='%s' WHERE id='%s'" % ('cuteboy', 3))
 c.execute("DELETE FROM users WHERE id=?",(4,))
 
 
-#중간 데이터 확인
+# 데이터 확인
 for user in c.execute("SELECT * FROM users"):
     print(user)
