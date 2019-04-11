@@ -19,9 +19,25 @@ class TestForm(QMainWindow):
 
         self.lineEdit = QLineEdit("", self)#Default 값
         self.plainEdit = QtWidgets.QPlainTextEdit(self)
+        #self.plainEdit.setReadOnly(True)
 
         self.lineEdit.move(90, 20)
         self.plainEdit.setGeometry(QtCore.QRect(20,90,361,231))
+
+        self.lineEdit.textChanged.connect(self.lineEditChanged)
+        self.lineEdit.returnPressed.connect(self.lineEditEnter)
+
+        #상태바
+        self.statusBar = QStatusBar(self)
+        self.setStatusBar(self.statusBar)
+
+    def lineEditChanged(self):
+        self.statusBar.showMessage(self.lineEdit.text())
+
+    def lineEditEnter(self):
+        self.plainEdit.appendPlainText(self.lineEdit.text())
+        #self.plainEdit.insertPlainText(self.lineEdit.text())
+        self.lineEdit.clear()
 
 
 
