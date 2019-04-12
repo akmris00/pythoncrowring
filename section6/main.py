@@ -54,6 +54,7 @@ class Main(QMainWindow, Ui_MainWindow):
         self.loginButton.clicked.connect(self.authCheck)
         self.previewButten.clicked.connect(self.load_url)
         self.exitButton.clicked.connect(QtCore.QCoreApplication.instance().quit)
+        self.webEngineView.loadProgress.connect(self.showProgressBrowserLoding)
 
     @pyqtSlot()
     def authCheck(self):
@@ -88,6 +89,12 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.showStatusMsg(url + "재생 중")
                 self.previewButten.setText("중지")
                 self.is_play = True
+                self.startButton.setEnabled(True)
+
+            else:
+                QMessageBox.about(self,"URL 오류", "URL 오류")
+                self.urlTextEdit.clear()
+                self.urlTextEdit.setFocus(True)
 
     #로그 남기기
     def append_log_msg(self,act):
@@ -100,6 +107,9 @@ class Main(QMainWindow, Ui_MainWindow):
         with open('c:/Atom/Crowring/section6/log/log.txt', 'a') as f:
             f.write(app_msg+ '\n')
 
+    @pyqtSlot(int)
+    def showProgressBrowserLoding(self):
+        pass
 
 
 if __name__ == "__main__":
