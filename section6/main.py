@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QUrl
 import datetime
 import re
 from lib.You_viewer_layout import Ui_MainWindow
@@ -23,6 +23,8 @@ class Main(QMainWindow, Ui_MainWindow):
         #로그인관련 변수 선언
         self.user_id = None
         self.user_pw = None
+        #재생 여부
+        self.is_play = False
 
     #기본 UI 비활성화 세팅
     def initAuthLock(self):
@@ -50,6 +52,8 @@ class Main(QMainWindow, Ui_MainWindow):
 
     def initSignal(self):
         self.loginButton.clicked.connect(self.authCheck)
+        self.previewButten.clicked.connect(self.load_url)
+        self.exitButton.clicked.connect(QtCore.QCoreApplication.instance().quit)
 
     @pyqtSlot()
     def authCheck(self):
@@ -66,9 +70,36 @@ class Main(QMainWindow, Ui_MainWindow):
             self.loginButton.setText("인증완료")
             self.loginButton.setEnabled(False)
             self.urlTextEdit.setFocus(True)
+            self.append_log_msg("login Success")
 
         else:
             QMessageBox.about(self,"인증오류","ID 또는 PW 인증 오류")
+
+
+    def load_url(self):
+        url = self.urlTextEdit.text().strip()
+        v = re.compile('^https://www.youtube.com/?')
+        if self.is_play:
+            pass
+        else:
+            if v.match(url) is not None:
+                self.append_log_msg('Play Click')
+                self.webEngineView.load(QUrl(url))
+                self.showStatusMsg(url + "재생 중")
+                self.previewButten.setText("중지")
+                self.is_play = True
+
+    #로그 남기기
+    def append_log_msg(self,act):
+        now = datetime.datetime.now()
+        nowDatetime = now.strftime('%Y-%m-%d %H:%M:%S')
+        app_msg = self.user_id + ' : ' + act + ' - (' + nowDatetime + ')'
+        self.plainTextEdit.appendPlainText(app_msg) #insert plaintext
+
+        #활동 로그 저장
+        with open('c:/Atom/Crowring/section6/log/log.txt', 'a') as f:
+            f.write(app_msg+ '\n')
+
 
 
 if __name__ == "__main__":
