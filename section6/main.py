@@ -115,15 +115,11 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.urlTextEdit.setFocus(True)
 
     def initialYouWork(self,url):
-        #video_list = pytube.YouTube(url)
         video_list = pytube.YouTube(url)
         #로딩바 계산
-        # self.youtb = video_list.streams.all()
+        video_list.register_on_progress_callback(self.showProgressDownLoding)
         self.youtb = video_list.streams.all()
-        # self.streamCombobox.clear()
         self.streamCombobox.clear()
-        # for q in self.youtb:
-        #     print(q)
         for q in self.youtb:
             tmp_list, str_list = [],[]
             tmp_list.append(str(q.mime_type or ''))
@@ -172,8 +168,15 @@ class Main(QMainWindow, Ui_MainWindow):
         down_dir = self.pathTextEdit.text().strip()
         if down_dir is None or down_dir == '' or not down_dir:
             QMessageBox.about(self,'경로 선택', '다운 경로 선택')
-            self.pathTextEdit.setFocus(True)
             return None
+
+        self.youtb_fsize = self.youtb[self.streamCombobox.currentIndex()].filesize
+        self.youtb[self.streamCombobox.currentIndex()].download(down_dir)
+        self.append_log_msg('Download Click')
+
+    def showProgressDownLoding(self, stream, chunk, finle_handle, bytes_remaining):
+        self.progressBar_2.setValue(int(((self.youtb_fsize - bytes_remaining) / self.youtb_fsize)*100))
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
