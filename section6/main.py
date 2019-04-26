@@ -7,6 +7,7 @@ import datetime
 import re
 from lib.You_viewer_layout import Ui_MainWindow
 from lib.AuthDialog import AuthDialog
+import pytube
 
 #form_class = uic.loadUiType('C:/Atom/Crowring/section6/ui/you_viewer_v1.0.ui')[0]
 
@@ -25,6 +26,10 @@ class Main(QMainWindow, Ui_MainWindow):
         self.user_pw = None
         #재생 여부
         self.is_play = False
+        #youtube 관련 작업
+        self.youtb = None
+        self.youtb_fsize = 0
+
 
     #기본 UI 비활성화 세팅
     def initAuthLock(self):
@@ -55,6 +60,9 @@ class Main(QMainWindow, Ui_MainWindow):
         self.previewButten.clicked.connect(self.load_url)
         self.exitButton.clicked.connect(QtCore.QCoreApplication.instance().quit)
         self.webEngineView.loadProgress.connect(self.showProgressBrowserLoding)
+        self.fileNavButton.clicked.connect(self.selectDownPath)
+        self.calendarWidget.clicked.connect(self.append_date)
+        self.startButton.clicked.connect(self.downloadYoutb)
 
     @pyqtSlot()
     def authCheck(self):
@@ -81,7 +89,16 @@ class Main(QMainWindow, Ui_MainWindow):
         url = self.urlTextEdit.text().strip()
         v = re.compile('^https://www.youtube.com/?')
         if self.is_play:
-            pass
+            self.append_log_msg('Stop Click')
+            self.webEngineView.load(QUrl('about:blank'))
+            self.previewButten.setText("재생")
+            self.is_play = False
+            self.urlTextEdit.clear()
+            self.urlTextEdit.setFocus(True)
+            self.startButton.setEnabled(False)
+            self.streamCombobox.clear()
+            self.progressBar_2.setValue(0)
+            self.showStatusMsg("인증완료")
         else:
             if v.match(url) is not None:
                 self.append_log_msg('Play Click')
@@ -90,11 +107,34 @@ class Main(QMainWindow, Ui_MainWindow):
                 self.previewButten.setText("중지")
                 self.is_play = True
                 self.startButton.setEnabled(True)
+                self.initialYouWork(url)
 
             else:
                 QMessageBox.about(self,"URL 오류", "URL 오류")
                 self.urlTextEdit.clear()
                 self.urlTextEdit.setFocus(True)
+
+    def initialYouWork(self,url):
+        #video_list = pytube.YouTube(url)
+        video_list = pytube.YouTube(url)
+        #로딩바 계산
+        # self.youtb = video_list.streams.all()
+        self.youtb = video_list.streams.all()
+        # self.streamCombobox.clear()
+        self.streamCombobox.clear()
+        # for q in self.youtb:
+        #     print(q)
+        for q in self.youtb:
+            tmp_list, str_list = [],[]
+            tmp_list.append(str(q.mime_type or ''))
+            tmp_list.append(str(q.res or ''))
+            tmp_list.append(str(q.fps or ''))
+            tmp_list.append(str(q.abr or ''))
+
+            str_list = [x for x in tmp_list if x != '']
+
+            self.streamCombobox.addItem(','.join(str_list))
+
 
     #로그 남기기
     def append_log_msg(self,act):
@@ -108,9 +148,32 @@ class Main(QMainWindow, Ui_MainWindow):
             f.write(app_msg+ '\n')
 
     @pyqtSlot(int)
-    def showProgressBrowserLoding(self):
-        pass
+    def showProgressBrowserLoding(self, v):
+        self.progressBar.setValue(v)
 
+    @pyqtSlot()
+    def selectDownPath(self):
+        #파일 선택
+        #fname = QFileDialog.getOpenFileName(self)
+        #self.pathTextEdit.setText(fname[0])
+
+        #경로 선택
+        fpath = QFileDialog.getExistingDirectory(self,'Select Directory')
+        self.pathTextEdit.setText(fpath)
+
+    def append_date(self):
+        cur_date = self.calendarWidget.selectedDate()
+        #print(self.calendarWidget.selectedDate().toString())
+        #print(cur_date)
+        self.append_log_msg('Calender click')
+
+
+    def downloadYoutb(self):
+        down_dir = self.pathTextEdit.text().strip()
+        if down_dir is None or down_dir == '' or not down_dir:
+            QMessageBox.about(self,'경로 선택', '다운 경로 선택')
+            self.pathTextEdit.setFocus(True)
+            return None
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
