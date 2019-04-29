@@ -2,12 +2,14 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5 import QtCore
 from PyQt5 import uic
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QUrl
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QUrl, QThread
 import datetime
 import re
 from lib.You_viewer_layout import Ui_MainWindow
 from lib.AuthDialog import AuthDialog
 import pytube
+from PyQt5.QtMultimedia import QSound
+from lib.IntroWalker import IntroWalker
 
 #form_class = uic.loadUiType('C:/Atom/Crowring/section6/ui/you_viewer_v1.0.ui')[0]
 
@@ -29,6 +31,10 @@ class Main(QMainWindow, Ui_MainWindow):
         #youtube 관련 작업
         self.youtb = None
         self.youtb_fsize = 0
+
+        #배경음악 Thread 작업 선언
+        self.initIntroThread()
+        #QSound.play('C:/Users/analysis/Downloads/section6/resource/intro.wav')
 
 
     #기본 UI 비활성화 세팅
@@ -63,6 +69,28 @@ class Main(QMainWindow, Ui_MainWindow):
         self.fileNavButton.clicked.connect(self.selectDownPath)
         self.calendarWidget.clicked.connect(self.append_date)
         self.startButton.clicked.connect(self.downloadYoutb)
+
+    #인트로 쓰레드 초기화 및 활성화
+    def initIntroThread(self):
+        #walker 선언
+        self.introObj = IntroWalker()
+        #Qthread 선언
+        self.introThread = QThread()
+        #walker를 쓰레드로 전환
+        self.introObj.moveToThread(self.introThread)
+        #시그널 연결
+        self.introObj.startMsg.connect(self.showIntroInfo)
+        #쓰레드 시작 메소드 연결
+        self.introThread.started.connect(self.introObj.playBgm)
+        #쓰레드 스타트
+        self.introThread.start()
+
+    #인트로 쓰레드 signal 실행
+    def showIntroInfo(self, userName, fileName):
+        self.plainTextEdit.appendPlainText('Program started by : ' + userName)
+        self.plainTextEdit.appendPlainText('Playing intro information is : ' + fileName)
+
+
 
     @pyqtSlot()
     def authCheck(self):
